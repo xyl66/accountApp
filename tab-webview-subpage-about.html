@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Hello MUI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<link rel="stylesheet" href="css/mui.min.css">
+		<style>
+			html,body {
+				background-color: #efeff4;
+			}
+			.title{
+				margin: 20px 15px 10px;
+				color: #6d6d72;
+				font-size: 15px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="mui-content">
+			<div class="title" id="app">
+				<div  class="mui-card">
+					<ol>
+						<li v-for="todo in tabledata">
+							{{ todo.pay }}{{ todo.style_01 }}{{ todo.style_02 }}{{ todo.paytype_02 }}
+						</li>
+					</ol>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="js/mui.min.js"></script>
+		<!-- 先引入 Vue -->
+	<script src="./js/vue.js"></script>
+	<script>
+		var t=new Vue({
+			  	el:'#app',
+			  	data:{
+			  		tabledata:[]
+			  	},
+			  	mounted(){
+			  		//读取数据
+				var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+					var msg,len;
+					if(!db){
+						console.log('数据库创建失败')
+					}else{
+						console.log('数据库创建成功')
+					}
+					db.transaction(function (tx) {
+					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+						console.log('查询数据');
+					tx.executeSql('SELECT * FROM EXPENDITURE', [], function (tx, results) {
+					    len = results.rows.length;
+					    t.tabledata=results.rows;
+					    var  i;
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					    for (i = 0; i < len; i++){
+					        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
+					        console.log(t.tabledata);
+					    }
+					}, null);
+					});
+			  	}
+			  });
+		mui.init({
+			swipeBack:true //启用右滑关闭功能
+		});
+	</script>
+</html>

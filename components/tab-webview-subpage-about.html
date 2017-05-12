@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <!-- 引入样式 -->
+    <!--饿了么ui-->
+	<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
+    <title></title>
+    <script src="../js/mui.min.js"></script>
+    <link href="../css/mui.min.css" rel="stylesheet"/>
+    <style>
+			html,body {
+				background-color: #efeff4;
+			}
+			.title{
+				margin: 20px 15px 10px;
+				color: #6d6d72;
+				font-size: 15px;
+			}
+		</style>
+</head>
+<body>
+	<header class="mui-bar mui-bar-nav">
+	    <!--<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>-->
+	    <h1 class="mui-title">服务器列表</h1>
+	    <button id='exit' class=" mui-pull-right mui-btn-link">退出</button>
+	</header>
+	<div class="mui-content">
+	    <div id="app">
+	    	<div class="mui-row">
+	    	<el-table :data="tableData" v-loading="loading"
+    element-loading-text="拼命加载中" stripe boder style="width: 100%" @selection-change="handleSelectionChange">
+	    		<el-table-column type="selection"></el-table-column>
+	    		<el-table-column type="expand">
+	    			<template scope="props">
+	    				<el-form label-position="left" inline class="demo-table-expand">
+	    					<el-form-item label="Ip">
+	    						<span>{{ props.row.ip }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="系統版本">
+	    						<span>{{ props.row.os }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="硬盤">
+	    						<span>{{ props.row.disk }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="規格">
+	    						<span>{{ props.row.size }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="內存">
+	    						<span>{{ props.row.ram }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="CPU數量">
+	    						<span>{{ props.row.cpuNum }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="備註">
+	    						<span>{{ props.row.remarks|remarksShow }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="維保期">
+	    						<span>{{ props.row.warranty|warrantyToDate }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="創建人">
+	    						<span>{{ props.row.creator }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="創建日期">
+	    						<span>{{ props.row.createDate|timeToDate }}</span>
+	    					</el-form-item>
+	    					<el-form-item label="修改人">
+	    						<span>{{ props.row.modified}}</span>
+	    					</el-form-item>
+	    					<el-form-item label="修改日期">
+	    						<span>{{ props.row.modifyDate|timeToDate}}</span>
+	    					</el-form-item>
+	    				</el-form>
+	    			</template>
+	    		</el-table-column>
+	    		<el-table-column prop="ip" label="Ip" header-align="center">
+	    		</el-table-column>
+	    		<!--<el-table-column md=8 prop="os" label="系統版本" width="180" header-align="center">-->
+	    		</el-table-column>
+	    		<el-table-column prop="isValid" label="狀態" header-align="center">
+	    			<template scope="scope">
+	    				<el-tag :type="scope.row.isValid?'success':'danger'" close-transition>
+	    					{{scope.row.isValid|statusint2str}}
+	    				</el-tag>
+	    			</template>
+	    		</el-table-column>
+	    		<el-table-column label="操作" header-align="center" class="mui-col-sm-12 mui-col-xs-12">
+	    			<template scope="scope">
+	    				<button type="button" @click="handleEdit(scope.$index,scope.row)" class="mui-btn">编辑</button>
+	    				<button type="button" @click="handleDelete(scope.$index,scope.row)" class="mui-btn mui-btn-danger">删除</button>
+	    			</template>
+	    		</el-table-column>
+	    	</el-table>
+	    	</div>
+	    	<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[2,5,10,20,50,100,200]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalSize">
+	    	</el-pagination>
+	    	<!--彈窗修改頁面-->
+	    	<el-dialog title="修改服務器信息" size='full' v-model="dialogFormVisible">
+	    		<el-form :model="form" :rules="rules" label-width="50px">
+	    			<el-form-item label="IP地址" prop="ip">
+	    				<el-input v-model="form.ip"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="類型" prop="type">
+	    				<el-select v-model="form.type" :placeholder="form.type|gettype">
+	    					<el-option label="實體機" value="1"></el-option>
+	    					<el-option label="虛擬機" value="0"></el-option>
+	    				</el-select>
+	    			</el-form-item>
+	    			<el-form-item label="規格">
+	    				<el-input v-model="form.size"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="OS版本" prop="os">
+	    				<el-select v-model="form.os" :placeholder="form.os" >
+	    					<el-option v-for="item in osOptions" :label="item.label" :value="item.value"></el-option>
+	    				</el-select>
+	    			</el-form-item>
+	    			<el-form-item label="硬盤容量" prop="disk">
+	    				<el-input v-model="form.disk"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="內存大小" prop="ram">
+	    				<el-input v-model="form.ram"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="CPU數量" prop="cpuNum">
+	    				<el-input v-model="form.cpuNum"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="備註">
+	    				<el-col :span="6">
+	    					<el-input v-model="form.remarks.remark1" placeholder="所屬部門/負責人">
+	    						<template slot="append">;</template>
+	    					</el-input>
+	    				</el-col>
+	    				<el-col :span="6">
+	    					<el-input v-model="form.remarks.remark2" placeholder="用途">
+	    						<template slot="append">;</template>
+	    					</el-input>
+	    				</el-col>
+	    				<el-col :span="6">
+	    					<el-input v-model="form.remarks.remark3" placeholder="購買日期">
+	    						<template slot="append">;</template>
+	    					</el-input>
+	    				</el-col>
+	    				<el-col :span="6">
+	    					<el-input v-model="form.remarks.remark4" placeholder="上架日期"></el-input>
+	    				</el-col>
+	    			</el-form-item>
+	    			<el-form-item label="所屬位置">
+	    				<el-input v-model="form.location"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="編號/名稱" prop="sn_Description">
+	    				<el-input v-model="form.sn_Description"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="維保期">
+	    				<el-col :span="11">
+	    					<el-date-picker type="date" placeholder="选择日期" v-model="form.date1" style="width: 100%;"></el-date-picker>
+	    				</el-col>
+	    			</el-form-item>
+	    			<el-form-item label="ILO">
+	    				<el-input v-model="form.ilo"></el-input>
+	    			</el-form-item>
+	    			<el-form-item label="是否有效">
+	    				<el-switch on-text="" off-text="" v-model="form.isValid"></el-switch>
+	    			</el-form-item>
+	    		</el-form>
+	    		<div class="dialog-footer" slot="footer">
+	    			<el-button @click="dialogFormVisible=false">取消</el-button>
+	    			<el-button type="primary" @click="updateServer">確定</el-button>
+	    		</div>
+	    	</el-dialog>
+  		</div>
+	</div>
+	<script src="../js/app.js"></script>
+	<!-- 先引入 Vue -->
+	<script src="../js/vue.js"></script>
+	<!--引入vue路由-->
+	<script src="../js/vue-resource.min.js" type="text/javascript" charset="utf-8"></script>
+	<!-- 引入组件库 -->
+	<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	<script>
+		mui.init({
+			swipeBack:true //启用右滑关闭功能
+		});
+		mui.plusReady(function () {
+			_self = plus.webview.currentWebview();
+				_self.setPullToRefresh({
+					support: true,
+					height: '50px',
+					range: '100px',
+					style: 'circle',
+					offset: '1px'
+				}, pulldownRefresh);
+			_self.show('slide-in-right', 300);
+			plus.nativeUI.closeWaiting();
+		})
+		var t=new Vue({
+	    el: '#app',
+	    data: function(){
+	      return {
+	      		loading:false,
+                url:'http://10.130.2.95/v1/',
+                msg: '服務器列表!',
+                tableData: [],
+                multipleSelection:[],
+                dialogFormVisible:false,
+                osOptions:[{ "value": "Linux"},
+                    {
+                        value: "Win7",
+                        label:"Win7"
+                    },
+                    {
+                        value: "WinXp",
+                        label: "WinXp"
+                    },
+                    {
+                        value: "Winservice2008",
+                        label: "Winservice2008"
+                    },
+                    {
+                        value: "Winservice2012",
+                        label: "Winservice2012"
+                    },
+                    {
+                        value: "Mac Os",
+                        label: "Mac Os"
+                    },
+                ],
+                form: {
+                    ip:'',
+                    type:'',
+                    size:'',
+                    os:'',
+                    disk:'',
+                    ram:'',
+                    cpuNum:'',
+                    remarks:{
+                        remark1:'',
+                        remark2:'',
+                        remark3:'',
+                        remark4:''
+                    },
+                    location:'',
+                    sn_Description:'',
+                    date1:'',
+                    date2:'',
+                    warranty:'',
+                    ilo:'',
+                    isValid:false,
+                    creator:'',
+                    createDate:'',
+                    modified:'',
+                    modifyDate:'',
+                },
+                rules: {
+                    ip: [
+                        { required: true, message: '请输入服務器Ip', trigger: 'blur' },
+                    ],
+                    type: [
+                        { required: true, message: '请选择類型', trigger: 'change' }
+                    ],
+                    os: [
+                        { required: true, message: '请选择系統版本', trigger: 'change' }
+                    ],
+                    disk: [
+                        { required: true, message: '請輸入硬盤大小', trigger: 'blur' },
+                    ],
+                    ram: [
+                        { required: true, message: '請輸入內存大小', trigger: 'blur' },
+                    ],
+                    cpuNum: [
+                        { required: true, message: '請輸入CPU數量', trigger: 'blur' },
+                    ],
+                    sn_Description: [
+                        { required: true, message: '請填寫編號/名稱', trigger: 'change' }
+                    ],
+                },
+                currentPage:1,
+                pageSize:5,
+                totalSize:0,
+            }
+	    },
+	    mounted(){
+            var self=this;
+            var url=this.url+'getServerList';
+            /*mui.ajax(url,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				success:function(response){
+					console.log(response.msg);
+					//获得服务器响应
+					this.tableData=response.subjects
+                	this.totalSize=response.total
+				},
+				error:function(xhr,type,errorThrown){
+					//异常处理；
+					console.log(type);
+				}
+			});*/
+            /*mui.get(url,function(response){ this.tableData=response.body.subjects
+                this.totalSize=response.body.total},'json' );*/
+        },
+        methods: {
+            startHacking () {
+                this.$notify({
+                    title: 'It Works',
+                    message: 'We have laid the groundwork for you. Now it\'s your time to build something epic!',
+                    duration: 6000
+                })
+            },
+            updateServer(){ //修改資料
+                var self=this
+                var url=this.url+'updateServer';
+                this.form.warranty=parseInt((new Date(this.form.date1).getTime())/1000)
+                this.$http.post(url,{form:this.form},{
+                    'headers':{
+
+                    },emulateJSON:true}).then(function(response){
+                        if(response.body.status){
+                            self.$message({message:'修改成功',type:'success'})
+                            self.form.modified=response.body.editinfo.editor
+                            self.form.modifyDate=response.body.editinfo.edittime
+                            self.dialogFormVisible=false
+                        }
+                        else
+                            self.$message.error(response.body.msg)
+                    },function(response){
+                        this.msg="erro"
+                        sele.$message.error('請求響應錯誤')
+                    }
+                )
+            },
+            handleEdit(index,row){
+                this.restaurants = this.loadAll();//系統版本選項預處理
+                this.form=row
+                this.form.date1=new Date(row.warranty*1000)
+                this.dialogFormVisible=true
+            },
+            handleDelete(index,row){
+                console.log(index,row);
+            },
+            handleSelectionChange(val){
+                this.multipleSelection=val
+                console.log(this.multipleSelection)
+            },
+            //系統版本選項預處理
+            querySearch(queryString, cb) {
+                var restaurants = this.restaurants;
+                var results = queryString ? restaurants.filter(this.createFilter(queryString)) : restaurants;
+                // 调用 callback 返回建议列表的数据
+                cb(results);
+            },
+            createFilter(queryString) {
+                return (restaurant) => {
+                    return (restaurant.value.indexOf(queryString.toLowerCase()) === 0);
+                };
+            },
+            loadAll() {
+                return [
+                    { "value": "Linux"},
+                    { "value": "Win7"},
+                    { "value": "WinXp"},
+                    { "value": "Winservice2008"},
+                    { "value": "Winservice2012"},
+
+                ];
+            },
+            //分頁處理函數分頁大小調整
+            handleSizeChange(val) {
+                this.pageSize=val
+                this.currentPage = 1;
+                var self=this
+                var url=this.url+'getServerList';
+                getserverList(self,url);
+                /*this.$http.post(url,{page:1,limit:this.pageSize},{
+                    'headers':{
+
+                    },emulateJSON:true}).then(function(response){
+                        if(response.body.status){
+                            self.tableData=response.body.subjects
+                        }
+                        else
+                            self.$message.error(response.body.msg)
+                    },function(response){
+                        self.$message.error('請求響應錯誤')
+                    }
+                )*/
+            },
+            //分頁處理函數分頁選擇
+            handleCurrentChange(val) {
+                this.currentPage = val;
+                var self=this
+                var url=this.url+'getServerList';
+                getserverList(self,url);
+                /*this.$http.post(url,{page:val,limit:this.pageSize},{
+                    'headers':{
+
+                    },emulateJSON:true}).then(function(response){
+                        if(response.body.status){
+                            self.tableData=response.body.subjects
+                        }
+                        else
+                            self.$message.error(response.body.msg)
+                    },function(response){
+                        self.$message.error('請求響應錯誤')
+                    }
+                )*/
+            },
+            //批量啟用
+            start(){
+                if(this.multipleSelection.length>0){
+                    var self=this
+                    var url=this.url+'updateServerStatus';
+                    this.$http.post(url,{form:this.multipleSelection,status:1},{
+                        'headers':{
+
+                        },emulateJSON:true}).then(function(response){
+                            if(response.body.status){
+                                self.$message({message:'修改成功',type:'success'})
+                                for(var item in self.multipleSelection){
+                                    self.multipleSelection[item].isValid=1
+                                }
+                            }
+                            else
+                                self.$message.error(response.body.msg)
+                        },function(response){
+                            this.msg="erro"
+                            sele.$message.error('請求響應錯誤')
+                        }
+                    )
+                }
+                else
+                    this.$message.error("未選擇服務器")
+            },
+            stop(){
+                if(this.multipleSelection.length>0){
+                    var self=this
+                    var url=this.url+'updateServerStatus';
+                    this.$http.post(url,{form:this.multipleSelection,status:0},{
+                        'headers':{
+
+                        },emulateJSON:true}).then(function(response){
+                            if(response.body.status){
+                                self.$message({message:'修改成功',type:'success'})
+                                for(var item in self.multipleSelection){
+                                    self.multipleSelection[item].isValid=0
+                                }
+                            }
+                            else
+                                self.$message.error(response.body.msg)
+                        },function(response){
+                            this.msg="erro"
+                            sele.$message.error('請求響應錯誤')
+                        }
+                    )
+                }
+                else
+                    this.$message.error("未選擇服務器")
+            },
+        },
+        filters:{//計算屬性
+            remarksShow:function(remarks){
+                var len=remarks.remark1.length+remarks.remark2.length+remarks.remark3.length+remarks.remark4.length
+                if(len)
+                    return remarks.remark1+';'+remarks.remark2+';'+remarks.remark3+';'+remarks.remark4
+                else
+                    return ''
+                },
+            timeToDate:function(val){ //時間戳轉時間
+                var t=new Date(val*1000)
+                var year=t.getFullYear(),mon=t.getMonth()+1,day=t.getDate()
+                var hour=t.getHours(),min=t.getMinutes(),sec=t.getSeconds()
+                return year+'-'+mon+'-'+day+' '+hour+':'+min+':'+sec
+            },
+            warrantyToDate:function(val){//維保期轉日期
+                if(val){
+                    var t=new Date(val*1000)
+                    var year=t.getFullYear(),mon=t.getMonth()+1,day=t.getDate()
+                    var hour=t.getHours(),min=t.getMinutes(),sec=t.getSeconds()
+                    return year+'-'+mon+'-'+day
+                }
+            },
+            statusint2str:function(value){//狀態轉換
+                return value?'有效':'無效'
+            },
+            gettype(val){
+            	let t=val==1?'實體機':'虛擬機'
+            	return t
+            }
+
+        },
+	  })
+		var url='http://10.130.2.95/v1/getServerList';
+		/* 下拉刷新具体业务实现
+			 */
+		function pulldownRefresh() {
+			setTimeout(function() {
+                getserverList(t,url);
+				_self.endPullToRefresh();
+			}, 1500);
+		};
+		//获取数据
+		function getserverList(self,url) {
+	  	self.loading=true;
+        self.$http.post(url,{page:self.currentPage,limit:self.pageSize},{
+            'headers':{
+
+            },emulateJSON:true}).then(function(response){
+                if(response.body.status){
+                    self.tableData=response.body.subjects
+                    self.loading=false;
+                }
+                else{
+                	self.loading=false;
+                    self.$message.error(response.body.msg)
+                   }
+            },function(response){
+            	self.loading=false;
+                self.$message.error('請求響應錯誤')
+            }
+        )
+    }
+		window.addEventListener('getlist', function() {
+					t.loading=true;
+					mui.ajax(url,{
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					success:function(response){
+						//获得服务器响应
+						t.tableData=response.subjects
+	                	t.totalSize=response.total
+	                	t.loading=false;
+					},
+					error:function(xhr,type,errorThrown){
+						//异常处理；
+						t.loading=false;
+					}
+				});
+				}, false);
+		 //退出操作******************
+		document.getElementById('exit').addEventListener('tap', function() {
+			if (mui.os.ios) {
+				app.setState({});
+				mui.openWindow({
+					url: 'login.html',
+					id: 'login',
+					show: {
+						aniShow: 'pop-in'
+					},
+					waiting: {
+						autoShow: false
+					}
+				});
+				return;
+			}
+			var btnArray = [{
+				title: "注销当前账号"
+			}, {
+				title: "直接关闭应用"
+			}];
+			plus.nativeUI.actionSheet({
+				cancel: "取消",
+				buttons: btnArray
+			}, function(event) {
+				var index = event.index;
+				switch (index) {
+					case 1:
+						//注销账号
+						app.setState({});
+						/*
+						 * 注意：
+						 * 1、因本示例应用启动页就是登录页面，因此注册成功后，直接显示登录页即可；
+						 * 2、如果真实案例中，启动页不是登录页，则需修改，使用mui.openWindow打开真实的登录页面
+						 */
+						plus.webview.getLaunchWebview().show("pop-in");
+						//若启动页不是登录页，则需通过如下方式打开登录页
+//						mui.openWindow({
+//							url: 'login.html',
+//							id: 'login',
+//							show: {
+//								aniShow: 'pop-in'
+//							}
+//						});
+						break;
+					case 2:
+						plus.runtime.quit();
+						break;
+				}
+			});
+		}, false);
+	</script>
+</body>
+</html>

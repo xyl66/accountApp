@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<div class="chartLineContent" id='app'>
+				<div >
+					<div class="mui-col-sm-6 mui-col-xs-12" id="line_1" style="width:350px;height:400px">{{line_id}}</div>
+				</div>
+			</div>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<!-- 先引入 Vue -->
+		<script src="../js/vue.js"></script>
+		<!--引入vue路由-->
+		<script src="../js/vue-resource.min.js" type="text/javascript" charset="utf-8"></script>
+		<!-- 引入组件库 -->
+		<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+		<script src="../js/echarts.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			//getMaxmin
+		    //maxmin=max or min
+		    function getMaxmin(arr,maxmin){
+		        if(maxmin=='max'){
+		            return Math.max.apply(Math,arr);
+		        }
+		        else if(maxmin=='min'){
+		            return Math.min.apply(Math,arr);
+		        }
+		    }
+			mui.init()
+			var count=5;
+			var url='http://10.134.159.91:8080/MSAPI/rest/readData/testGet/10.134.159.94'+"``"+count;
+			var t=new Vue({
+	    		el: '#app',
+	    		data () {
+		            return {
+		                msg: 'Use Vue 2.0 Today!',
+		                intervalid:'',
+		                date1:[],
+		                data:[],
+		                line_id:'line_1',
+		                line_title:'neicun'
+		            }
+		       },
+		        mounted(){
+		            var self=this;
+		            //tubiao
+		            if(self.line_title=="内存"){
+		
+		            }
+		            var option = {
+		                title:{
+		                    text: 'neicun',
+		                    left: 'center',
+		                    top: 20,
+		                    textStyle: {
+		                        color: '#000'
+		                    }
+		                },
+		                tooltip:{
+		                    trigger:'axis'
+		                },
+		                xAxis: {
+		                    type: 'category',
+		                    boundaryGap: false,
+		                    data: self.date1
+		                },
+		                yAxis: {
+		                    axisLabel:{
+		                        formatter:function (value) {
+		                            return value+'M';
+		                        }
+		                    },
+		                    boundaryGap: [0, '50%'],
+		                    type: 'value',
+		                    splitNumber:5
+		                },
+		                series: [
+		                    {
+		                        name:this.line_title+'信息',
+		                        type:'line',
+		                        smooth:true,
+		                        symbol: 'circle',
+		                        stack: 'a',
+		                        areaStyle: {
+		                            normal: {}
+		                        },
+		                        data: self.data
+		                    }
+		                ]
+		            };
+		            //chushihua
+		            this.$http.get(url).then(function(response){
+		                for (var i = count-1; i >= 0; i--) {
+		                    var tem=response.body[i]["date"];
+		                    tem =tem.substr(8,tem.lenght);
+		                    self.date1.push(tem)
+		                    self.data.push(parseFloat(response.body[i].Process['Working Set']._total)/1024/1024);
+		                }
+		
+		            },function (response) {
+		                console.log('chucuo0:'+response)
+		            });  
+		            //chushihua
+		            var myChart=echarts.init(document.getElementById('line_1'));
+		            var loadflag=1;
+		            myChart.showLoading()
+		            myChart.setOption(option);
+		            var setintervalid=setInterval(function () {
+		                self.$http.get(url,{},{
+		                    headers:{
+		                        "X-Request-With":"XMLHttpRequest",
+		                    }
+		                }).then(response=>{
+		                    var tem=response.body[0]["date"];
+		                    tem=tem.substr(8,tem.length)
+		                    self.date1.push(tem)
+		                    self.data.push(parseFloat(response.body[0].Process['Working Set']._total/1024/1024))
+		                    self.date1.shift()
+		                    self.data.shift()
+		                })
+		                myChart.setOption({
+		                    xAxis: {
+		                        data: self.date1
+		                    },
+		                    yAxis:{
+		                        max:getMaxmin(self.data,'max')+10,
+		                        min:getMaxmin(self.data,'min')-10
+		                    },
+		                    series: [{
+		                        name:'成交',
+		                        data: self.data
+		                    }]
+		                });
+		                if(self.date1.length>=5){
+		                	myChart.hideLoading();
+		                }
+		                
+		            }, 5000);
+		
+		        },
+		        methods: {
+		            startHacking () {
+		                console.log(this.datach);
+		                console.log(this.datech);
+		                this.$notify({
+		                    title: 'It Works',
+		                    message: 'We have laid the groundwork for you. Now it\'s your time to build something epic!',
+		                    duration: 6000
+		                })
+		            },
+		            gettoken(){
+		                this.$http.get('http://10.130.2.95/indexapi').then(response=>{
+		                    alert(response.data.msg);
+		                })
+		            }
+		
+		        },
+		        beforeDestroy(){
+		            console.log('intervalid1:'+this.intervalid)
+		            clearInterval(this.intervalid)
+		        },
+
+			})
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>Hello MUI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<link rel="stylesheet" href="css/mui.min.css">
+		<style>
+			html,body {
+				background-color: #efeff4;
+			}
+			.title{
+				margin: 20px 15px 10px;
+				color: #6d6d72;
+				font-size: 15px;
+			}
+			 .oa-contact-cell.mui-table .mui-table-cell {
+				padding: 11px 0;
+				vertical-align: middle;
+			}
+			
+			.oa-contact-cell {
+				position: relative;
+				margin: -11px 0;
+			}
+	
+			.oa-contact-avatar {
+				width: 75px;
+			}
+			.oa-contact-avatar img {
+				border-radius: 50%;
+			}
+			.oa-contact-content {
+				width: 100%;
+			}
+			.oa-contact-name {
+				margin-right: 20px;
+			}
+			.oa-contact-name, oa-contact-position {
+				float: left;
+			}
+		</style>
+	</head>
+
+	<body>
+		<style>
+			.mui-control-content {
+				background-color: white;
+				min-height: 215px;
+			}
+			.mui-control-content .mui-loading {
+				margin-top: 50px;
+			}
+			.mui-content #slider{
+				
+			}
+			.menu{
+				position: relative;
+			}
+			.menu .mui-input-group{
+				position: absolute;
+				bottom: px;
+				width: 100%;
+				background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+				border: none 0px;
+				z-index: 1;
+			}
+			.menu .mui-input-group:before,.menu .mui-input-group:after{
+				background-color: rgba(0,0,0,0)
+			}
+			.font-mini{
+				font-size: 12px;
+				height: 33px;
+				width: 20%;
+			}
+			#item1mobile,#item2mobile,#item3mobile{
+				min-height: 400px;
+				z-index: -1;
+				background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+			}
+			#fe3{
+				color: darkgreen;
+				font-weight: bold;
+				font-size: 28px;
+				height: 50px;
+			}
+			#showTypePicker,#showAccountPicker{
+				width: 100%;
+			}
+			#showTypePicker label{
+				width:5%;
+			}
+			#showTypePicker label:first-child,#showTypePicker label:last-child{
+				width: 25%;
+			}
+			#dataSelector label{
+				width: auto;
+			}
+		</style>
+		<div class="mui-content" id='app'>
+			<div id="slider" class="mui-slider">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item" href="#item1mobile">
+				支出
+			</a>
+					<a class="mui-control-item" href="#item2mobile">
+				收入
+			</a>
+					<a class="mui-control-item" href="#item3mobile">
+				余额
+			</a>
+				</div>
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-4"></div>
+				<div class="mui-slider-group" >
+					<div id="item1mobile" class="mui-slider-item mui-control-content mui-active">
+						<div id="scroll1" class="mui-scroll-wrapper">
+							<div class="mui-scroll">
+								<form class="mui-input-group">
+									<div class="mui-input-row" style="height: 50px;">
+										<input id="fe3" v-model="pay" type="number" step="0.1" onblur="noNumbers(event,2)" placeholder="请输入金额" class="txt nojs" name=""  value="0.00" />
+									</div>
+								    <div class="mui-input-row" id="showTypePicker">
+								    		<label>{{place.country}}</label>
+											<label for="">></label>
+											<label>{{place.city}}</label>
+								    </div>
+								    <div class="mui-input-row" id="showAccountPicker">
+								    		<label class='showAccountPicker' type='button'>{{paytype.type2}}</label>
+								    </div>
+								    <div class="mui-input-row" id="dataSelector">
+								        	<label for="">日期:  {{datatime}}</label>	
+								    </div>
+								</form>
+							</div>
+						</div>
+					</div>
+					<div id="item2mobile" class="mui-slider-item mui-control-content">
+						<div id="scroll2" class="mui-scroll-wrapper">
+							<div class="mui-scroll">
+								<div class="mui-loading">
+									<div class="mui-spinner">
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+					<div id="item3mobile" class="mui-slider-item mui-control-content">
+						<div id="scroll3" class="mui-scroll-wrapper">
+							<div class="mui-scroll">
+								<div class="mui-loading">
+									<div class="mui-spinner">
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+			<div class="menu">
+				<form class="mui-input-group">
+					<div class="mui-button-row">
+						<button type="button" id="sav_btn" class="mui-btn mui-btn-warning" style="width: 45%;height: 33px;">保存</button>
+						<button type="button" class="mui-btn font-mini" >存为模板</button>
+						<button type="button" class="mui-btn font-mini" >再记一笔</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+	<script src="js/mui.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/mui.picker.min.css"/>
+	<script src="js/mui.picker.min.js" type="text/javascript" charset="utf-8"></script>
+	<!-- 先引入 Vue -->
+	<script src="./js/vue.js"></script>
+	<!--引入option数据-->
+	<script src="js/type-options.js" type="text/javascript" charset="utf-8"></script>
+	<script>
+		//vue
+			  var t=new Vue({
+			  	el:'#app',
+			  	data:{
+			  		pay:'',
+			  		place:{
+			  			country:'',
+			  			city:'',
+			  		},
+			  		paytype:{
+			  			type1:'',
+			  			type2:''
+			  		},
+			  		datatime:'',
+			  		tabledata:[]
+			  	},
+			  });
+		mui.init({
+				swipeBack: false
+			});
+			(function($) {
+				$.plusReady(function(){
+				const oH=plus.android.invoke(plus.android.currentWebview(),'getHeight');
+				const x=20;
+			 	window.onresize=()=>{
+					let oH2=plus.android.invoke(plus.android.currentWebview(),'getHeight');
+					var zindex=oH>oH2+x?1:0;
+			 		var main=plus.webview.currentWebview().parent();
+			 		mui.fire(main,'barHide',{zindex:zindex});
+			 		document.getElementsByClassName('mui-input-group')[1].style.display=zindex?'none':'block';
+			 		
+			 	};
+			 	
+			 });
+			 	$('.mui-scroll-wrapper').scroll({
+					indicators: true //是否显示滚动条
+				});
+				var html2 = '<ul class="mui-table-view"><li class="mui-table-view-cell">第二个选项卡子项-1</li><li class="mui-table-view-cell">第二个选项卡子项-2</li><li class="mui-table-view-cell">第二个选项卡子项-3</li><li class="mui-table-view-cell">第二个选项卡子项-4</li><li class="mui-table-view-cell">第二个选项卡子项-5</li></ul>';
+				var html3 = '<ul class="mui-table-view"><li class="mui-table-view-cell">第三个选项卡子项-1</li><li class="mui-table-view-cell">第三个选项卡子项-2</li><li class="mui-table-view-cell">第三个选项卡子项-3</li><li class="mui-table-view-cell">第三个选项卡子项-4</li><li class="mui-table-view-cell">第三个选项卡子项-5</li></ul>';
+				var item2 = document.getElementById('item2mobile');
+				var item3 = document.getElementById('item3mobile');
+				document.getElementById('slider').addEventListener('slide', function(e) {
+					if (e.detail.slideNumber === 1) {
+						if (item2.querySelector('.mui-loading')) {
+							setTimeout(function() {
+								item2.querySelector('.mui-scroll').innerHTML = html2;
+							}, 500);
+						}
+					} else if (e.detail.slideNumber === 2) {
+						if (item3.querySelector('.mui-loading')) {
+							setTimeout(function() {
+								item3.querySelector('.mui-scroll').innerHTML = html3;
+							}, 500);
+						}
+					}
+				});
+				var sliderSegmentedControl = document.getElementById('sliderSegmentedControl');
+				$('.mui-input-group').on('change', 'input', function() {
+					if (this.checked) {
+						sliderSegmentedControl.className = 'mui-slider-indicator mui-segmented-control mui-segmented-control-inverted mui-segmented-control-' + this.value;
+						//force repaint
+						sliderProgressBar.setAttribute('style', sliderProgressBar.getAttribute('style'));
+					}
+				});
+				// 监听tap事件，解决 a标签 不能跳转页面问题
+				$('body').on('tap','a',function(){document.location.href=this.href;});
+				
+			})(mui);
+			 
+			 mui.ready(function () {
+			 	//数字输入
+			 	/*mui('.mui-input-row').on('tap','#fe3',function(event){
+			 		this.value='';
+			 	})*/
+			 	var input_number=document.getElementById('fe3');
+			 	//类型选择
+				var typePicker = new mui.PopPicker({
+				    layer: 2
+				});
+				typePicker.setData(typeOptions)
+				typePicker.pickers[0].setSelectedIndex(0);
+				typePicker.pickers[1].setSelectedIndex(0);
+				var it=typePicker.getSelectedItems();
+				t.place.country=it[0].text;
+				t.place.city=typeOptions[0].children[0].text;
+				mui('.mui-input-group').on('tap','#showTypePicker',function(){
+					input_number.blur();
+					 typePicker.show(function(items) {
+						//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
+						t.place.country=items[0].text;
+						t.place.city=items[1].text;
+						//返回 false 可以阻止选择框的关闭
+						//return false;
+					});
+				}); 
+				//支付选择
+				var payPicker = new mui.PopPicker({
+				    layer: 2
+				});
+				payPicker.setData(accountOptions)
+				payPicker.pickers[0].setSelectedIndex(0);
+				payPicker.pickers[1].setSelectedIndex(0);
+				var it=payPicker.getSelectedItems();
+				t.paytype.type1=it[0].text;
+				t.paytype.type2=accountOptions[0].children[1].text;
+				mui('.mui-input-group').on('tap','#showAccountPicker',function(){
+					input_number.blur();
+					 payPicker.show(function(items) {
+						//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
+						t.paytype.type1=items[0].text;
+						t.paytype.type2=items[1].text;
+						//返回 false 可以阻止选择框的关闭
+						//return false;
+					});
+				}); 
+				var dtPicker = new mui.DtPicker({"type": "date",
+				    //labels: ['Year', 'Mon', 'Day', 'Hour', 'min'],//设置默认标签区域提示语 
+				});
+				mui('.mui-input-group').on('tap','#dataSelector',function(){
+					input_number.blur();
+				    dtPicker.show(function (selectItems) { 
+				    	t.datatime=selectItems.text;
+				    })
+				}); 
+				
+				//保存数据
+				mui('.mui-button-row').on('tap','#sav_btn',()=>{
+					var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+					var msg,len;
+					if(!db){
+						console.log('数据库创建失败')
+					}else{
+						console.log('数据库创建成功')
+					}
+					db.transaction(function (tx) {
+					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+						console.log('查询数据');
+					tx.executeSql('SELECT * FROM EXPENDITURE', [], function (tx, results) {
+					    len = results.rows.length;
+					    var  i;
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					 	console.log(msg);
+					    for (i = 0; i < len; i++){
+					        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
+					        console.log(msg);
+					    }
+					}, null);
+					});
+					db.transaction(function (tx) {
+					    var date=new Date(t.datatime);
+					    var str=date.getTime();
+					    var sqlstr='INSERT INTO expenditure (id,pay, style_01,style_02,paytype_01,paytype_02,datatime) VALUES (?,?,?,?,?,?,?)';
+					    let data=[(len+1),t.pay,t.place.country,t.place.city,t.paytype.type1,t.paytype.type2,str];
+					    tx.executeSql(sqlstr,data);
+					    msg = '<p>数据表已创建，且插入了一条数据。</p>';
+					    console.log(msg);
+					});
+					 
+					
+				})
+			  });
+		//保留两位小数
+		function noNumbers(e,len)  
+		{  
+		
+		var val = e.currentTarget.value;
+		if(!val){
+		return;
+		}
+		
+		
+		var b = parseFloat(val);
+		e.currentTarget.value = Number(b).toFixed(len);
+		
+		
+		}  
+	</script>
+</html>
