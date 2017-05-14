@@ -17,17 +17,46 @@
 				color: #6d6d72;
 				font-size: 15px;
 			}
+			/*点击变蓝色高亮*/
+			.mui-table-view-cell.mui-active{
+				background-color: #0062CC;
+				color: white;
+			}
 		</style>
 	</head>
 	<body>
 		<div class="mui-content">
 			<div class="title" id="app">
-				<div  class="mui-card">
-					<ol>
-						<li v-for="todo in tabledata">
-							{{ todo.pay }}{{ todo.style_01 }}{{ todo.style_02 }}{{ todo.paytype_02 }}
-						</li>
-					</ol>
+				<!--下拉刷新容器-->
+				<div id="refreshContainer" class="mui-content mui-scroll-wrapper">
+				  <div class="mui-scroll">
+				    <!--数据列表-->
+				    <ul class="mui-table-view">
+				        <li class="mui-table-view-cell mui-collapse" v-for="todo in tabledata">
+				            <a class="mui-navigate-right" href="#">{{ todo.style_02 }}</a>
+				            <span class="mui-badge mui-badge-primary">{{ todo.pay }}</span>
+				            <div class="mui-collapse-content">
+				            		<p>金额：{{ todo.pay }}</p>
+				                <p>消费类型：{{ todo.style_02 }}</p>
+				                <p>支付类型：{{todo.paytype_02}}</p>
+				                <p>消费时间:{{todo.datatime|getPaydatetime}}</p>
+				            </div>
+				        </li>
+				    </ul>
+				    <!--数据列表-->
+				    <ul class="mui-table-view">
+				        <li class="mui-table-view-cell mui-collapse" v-for="todo in countdata">
+				            <a class="mui-navigate-right" href="#">{{ todo.datatime|getPaydatetime }}</a>
+				            <span class="mui-badge mui-badge-primary">{{ todo.payall }}</span>
+				            <div class="mui-collapse-content">
+				            		<p>金额：{{ todo.pay }}</p>
+				                <p>消费类型：{{ todo.style_02 }}</p>
+				                <p>支付类型：{{todo.paytype_02}}</p>
+				                <p>消费时间:{{todo.datatime|getPaydatetime}}</p>
+				            </div>
+				        </li>
+				    </ul>
+				  </div>
 				</div>
 			</div>
 		</div>
@@ -35,11 +64,14 @@
 	<script src="js/mui.min.js"></script>
 		<!-- 先引入 Vue -->
 	<script src="./js/vue.js"></script>
+	<!--引入时间戳转时间函数-->
+	<script src="js/date.js" type="text/javascript" charset="utf-8"></script>
 	<script>
 		var t=new Vue({
 			  	el:'#app',
 			  	data:{
-			  		tabledata:[]
+			  		tabledata:[],
+			  		countdata:[]
 			  	},
 			  	mounted(){
 			  		//读取数据
@@ -63,11 +95,59 @@
 					        console.log(t.tabledata);
 					    }
 					}, null);
+					tx.executeSql('SELECT *, SUM(pay) AS payall FROM EXPENDITURE GROUP BY datatime', [], function (tx, results) {
+					    len = results.rows.length;
+					    t.countdata=results.rows;
+					    console.log(len);
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					}, null);
 					});
+			  },
+			  filters:{
+			  	getPaydatetime:function(value){
+			  		var t=value/1000;
+			  		return getLocalTime(t);
 			  	}
+			  }
 			  });
-		mui.init({
-			swipeBack:true //启用右滑关闭功能
-		});
+	    mui.init({
+	    	  swipeBack:true,//启用右滑关闭功能
+	      pullRefresh : {
+	        container:'#refreshContainer',
+	        down : {
+	         	contentrefresh: '正在加载...',
+	          callback :pulldownRefresh 
+	        }
+	      }
+	    });
+	    /**
+			 * 下拉刷新具体业务实现
+			 */
+			function pulldownRefresh() {
+				setTimeout(function() {
+					var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+					var msg,len;
+					if(!db){
+						console.log('数据库创建失败')
+					}else{
+						console.log('数据库创建成功')
+					}
+					db.transaction(function (tx) {
+					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+						console.log('查询数据');
+					tx.executeSql('SELECT * FROM EXPENDITURE', [], function (tx, results) {
+					    len = results.rows.length;
+					    t.tabledata=results.rows;
+					    var  i;
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					    for (i = 0; i < len; i++){
+					        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
+					        console.log(t.tabledata);
+					    }
+					}, null);
+					});
+					mui('#refreshContainer').pullRefresh().endPulldownToRefresh(); //refresh completed
+				}, 1000);
+			}
 	</script>
 </html>

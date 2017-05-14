@@ -219,7 +219,8 @@
 					"index.html",
 					"tab-webview-main.html",
 					"components/tab-webview-main.html",
-					"components/tab-webview-subpage-about.html"
+					"components/tab-webview-subpage-about.html",
+					"reg.html"
 				],
 				"priority": 0
 			},
@@ -247,7 +248,8 @@
 				"resources": [
 					"js/vue-resource.min.js",
 					"js/vue.js",
-					"css/mui.min.css"
+					"css/mui.min.css",
+					"js/date.js"
 				],
 				"refer": [],
 				"priority": 0
@@ -322,6 +324,16 @@
 					"js/type-options.js"
 				],
 				"refer": [],
+				"priority": 0
+			},
+			"reg.html": {
+				"resources": [
+					"css/mui.min.css",
+					"css/style.css"
+				],
+				"refer": [
+					"login.html"
+				],
 				"priority": 0
 			}
 		},
