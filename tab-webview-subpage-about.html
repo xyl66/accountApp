@@ -23,11 +23,16 @@
 		<div class="mui-content">
 			<div class="title" id="app">
 				<div  class="mui-card">
-					<ol>
-						<li v-for="todo in tabledata">
-							{{ todo.pay }}{{ todo.style_01 }}{{ todo.style_02 }}{{ todo.paytype_02 }}
-						</li>
-					</ol>
+					<ul class="mui-table-view">
+					    <li class="mui-table-view-cell mui-collapse" v-for="todo in tabledata">
+					        <a class="mui-navigate-right" href="#">{{ todo.style_02 }}<span class="mui-badge mui-badge-primary">{{ todo.pay }}</span></a>
+					        <div class="mui-collapse-content">
+					            <p>消费类型：{{ todo.style_02 }} </p>
+					            <p>支付方式：{{ todo.paytype_02 }}</p>
+					            <p>费用：{{ todo.pay }}</p>
+					        </div>
+					    </li>
+					</ul>
 				</div>
 			</div>
 		</div>
