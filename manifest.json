@@ -219,7 +219,8 @@
 					"index.html",
 					"tab-webview-main.html",
 					"components/tab-webview-main.html",
-					"components/tab-webview-subpage-about.html"
+					"components/tab-webview-subpage-about.html",
+					"reg.html"
 				],
 				"priority": 0
 			},
@@ -247,9 +248,14 @@
 				"resources": [
 					"js/vue-resource.min.js",
 					"js/vue.js",
-					"css/mui.min.css"
+					"css/mui.min.css",
+					"js/date.js"
 				],
-				"refer": [],
+				"refer": [
+					"pullrefresh_sub.html",
+					"pullrefresh_main.html",
+					"detail.html"
+				],
 				"priority": 0
 			},
 			"tab-webview-main.html": {
@@ -320,6 +326,39 @@
 					"css/mui.picker.min.css",
 					"js/vue.js",
 					"js/type-options.js"
+				],
+				"refer": [],
+				"priority": 0
+			},
+			"reg.html": {
+				"resources": [
+					"css/mui.min.css",
+					"css/style.css"
+				],
+				"refer": [
+					"login.html"
+				],
+				"priority": 0
+			},
+			"pullrefresh_sub.html": {
+				"resources": [
+					"css/mui.min.css"
+				],
+				"refer": [],
+				"priority": 0
+			},
+			"pullrefresh_main.html": {
+				"resources": [
+					"pullrefresh_sub.html",
+					"css/mui.min.css",
+					"detail.html"
+				],
+				"refer": [],
+				"priority": 0
+			},
+			"detail.html": {
+				"resources": [
+					"css/mui.min.css"
 				],
 				"refer": [],
 				"priority": 0

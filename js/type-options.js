@@ -1,4 +1,4 @@
-const typeOptions=[{
+var typeOptions=[{
 				        value: '110000',
 				        text: '食品酒水',
 				        children: [{

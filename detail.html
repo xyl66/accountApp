@@ -43,12 +43,6 @@
 				            </div>
 				        </li>
 				    </ul>
-				    <!--数据列表-->
-				    <ul class="mui-table-view timelist">
-				        <li class="mui-table-view-cell" v-for="todo in countdata">
-				            <a class="mui-navigate-right" href="#" :timecode="todo.datatime">{{ todo.datatime|getPaydatetime }}</a>
-				        </li>
-				    </ul>
 				  </div>
 				</div>
 			</div>
@@ -60,78 +54,28 @@
 	<!--引入时间戳转时间函数-->
 	<script src="js/date.js" type="text/javascript" charset="utf-8"></script>
 	<script>
-		var t=new Vue({
+	    var t=new Vue({
 			  	el:'#app',
 			  	data:{
-			  		tablename:'expenditure',
 			  		tabledata:[],
-			  		countdata:[]
+			  		countdata:[],
+			  		nowtime:'',
 			  	},
-			  	mounted(){
-			  		//读取数据
-				var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
-					var msg,len;
-					if(!db){
-						console.log('数据库创建失败')
-					}else{
-						console.log('数据库创建成功')
-					}
-					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.tablename+' (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
-						console.log('查询数据');
-					tx.executeSql('SELECT * FROM '+t.tablename, [], function (tx, results) {
-					    len = results.rows.length;
-					    t.tabledata=results.rows;
-					    var  i;
-					    msg = "<p>查询记录条数: " + len + "</p>";
-					    for (i = 0; i < len; i++){
-					        //msg = "<p><b>" + results.rows.item(i).balance+"</b><b>" + results.rows.item(i).id+"</b><b>" +results.rows.item(i).remarks+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
-					        console.log(msg);
-					    }
-					}, null);
-					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+t.tablename+' GROUP BY datatime', [], function (tx, results) {
-					    len = results.rows.length;
-					    t.countdata=results.rows;
-					    console.log(len);
-					    msg = "<p>查询记录条数: " + len + "</p>";
-					}, null);
-					});
-			  },
-			  filters:{
-			  	getPaydatetime:function(value){
-			  		var t=value/1000;
-			  		return getLocalTime(t);
-			  	}
-			  }
-			  });
-	    mui.init({
-	    	swipeBack:true,//启用右滑关闭功能
-	      	pullRefresh : {
-		        container:'#refreshContainer',
-		        down : {
-		         	contentrefresh: '正在加载...',
-		          callback :pulldownRefresh 
-		        },
-	      }
-	    });
-	    //
-	    mui.ready(function(){
-	    	mui('.timelist').on('tap','a',function(){
-	    		//打开新闻详情
-			  mui.openWindow({
-			    id:'detail',
-			    url:'pullrefresh_main.html'
-			  });
-			  var detail=plus.webview.getWebviewById('detail');
-			  plus.storage.setItem('nowtime',this.getAttribute('timecode'));
-	    	  //mui.fire(detail,'godetail',{time:this.getAttribute('timecode')});
-	    	})
-	    })
-	    /**
-			 * 下拉刷新具体业务实现
-			 */
-			function pulldownRefresh() {
-				setTimeout(function() {
+			  	mounted (){
+			  		//mui
+			  		mui.plusReady(function(){
+			  			mui.init({
+					    	swipeBack:true,//启用右滑关闭功能
+					      	pullRefresh : {
+						        container:'#refreshContainer',
+						        down : {
+						         	contentrefresh: '正在加载...',
+						          callback :pulldownRefresh 
+						        },
+					      }
+					    });
+					    t.nowtime=plus.storage.getItem('nowtime');
+					    //读取数据
 					var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
 					var msg,len;
 					if(!db){
@@ -140,9 +84,9 @@
 						console.log('数据库创建成功')
 					}
 					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.tablename+' (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
-						console.log('查询数据');
-					tx.executeSql('SELECT * FROM '+t.tablename, [], function (tx, results) {
+					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+						console.log(t.nowtime);
+					tx.executeSql('SELECT * FROM EXPENDITURE where datatime=?', [t.nowtime], function (tx, results) {
 					    len = results.rows.length;
 					    t.tabledata=results.rows;
 					    var  i;
@@ -152,11 +96,49 @@
 					        console.log(t.tabledata);
 					    }
 					}, null);
-					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+t.tablename+' GROUP BY datatime', [], function (tx, results) {
+					});
+			  		});
+			  		
+			  },
+			  filters:{
+			  	getPaydatetime:function(value){
+			  		var t=value/1000;
+			  		return getLocalTime(t);
+			  	}
+			  }
+			  });
+	    //
+	    /**
+			 * 下拉刷新具体业务实现
+			 */
+			function pulldownRefresh() {
+				t.nowtime=plus.storage.getItem('nowtime')
+				setTimeout(function() {
+					//读取数据
+				var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+					var msg,len;
+					if(!db){
+						console.log('数据库创建失败')
+					}else{
+						console.log('数据库创建成功')
+					}
+					db.transaction(function (tx) {
+					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+					console.log(t.nowtime);
+					tx.executeSql('SELECT * FROM EXPENDITURE where datatime=?', [t.nowtime], function (tx, results) {
+					    len = results.rows.length;
+					    console.log(plus.webview.all().length);
+					    t.tabledata=results.rows;
+					    var  i;
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					    for (i = 0; i < len; i++){
+					        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
+					        console.log(t.tabledata);
+					    }
+					}, null);
+					tx.executeSql('SELECT *, SUM(pay) AS payall FROM EXPENDITURE GROUP BY datatime', [], function (tx, results) {
 					    len = results.rows.length;
 					    t.countdata=results.rows;
-					    console.log(t.tablename);
-					    console.log(len);
 					    msg = "<p>查询记录条数: " + len + "</p>";
 					}, null);
 					});

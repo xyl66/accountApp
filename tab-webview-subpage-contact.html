@@ -82,19 +82,24 @@
 				z-index: -1;
 				background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
 			}
-			#fe3{
-				color: darkgreen;
+			#fe3,#fe4{
 				font-weight: bold;
 				font-size: 28px;
 				height: 50px;
 			}
-			#showTypePicker,#showAccountPicker{
+			#fe3{
+				color: darkgreen;
+			}
+			#fe4{
+				color: #FF5053;
+			}
+			.showTypePicker,#showAccountPicker{
 				width: 100%;
 			}
-			#showTypePicker label{
+			.showTypePicker label{
 				width:5%;
 			}
-			#showTypePicker label:first-child,#showTypePicker label:last-child{
+			.showTypePicker label:first-child,.showTypePicker label:last-child{
 				width: 25%;
 			}
 			#dataSelector label{
@@ -119,11 +124,11 @@
 					<div id="item1mobile" class="mui-slider-item mui-control-content mui-active">
 						<div id="scroll1" class="mui-scroll-wrapper">
 							<div class="mui-scroll">
-								<form class="mui-input-group">
+								<form class="mui-input-group pay-content">
 									<div class="mui-input-row" style="height: 50px;">
 										<input id="fe3" v-model="pay" type="number" step="0.1" onblur="noNumbers(event,2)" placeholder="请输入金额" class="txt nojs" name=""  value="0.00" />
 									</div>
-								    <div class="mui-input-row" id="showTypePicker">
+								    <div class="mui-input-row showTypePicker">
 								    		<label>{{place.country}}</label>
 											<label for="">></label>
 											<label>{{place.city}}</label>
@@ -141,10 +146,22 @@
 					<div id="item2mobile" class="mui-slider-item mui-control-content">
 						<div id="scroll2" class="mui-scroll-wrapper">
 							<div class="mui-scroll">
-								<div class="mui-loading">
-									<div class="mui-spinner">
+								<form class="mui-input-group earn-content">
+									<div class="mui-input-row" style="height: 50px;">
+										<input id="fe4" v-model="pay" type="number" step="0.1" onblur="noNumbers(event,2)" placeholder="请输入金额" class="txt nojs" name=""  value="0.00" />
 									</div>
-								</div>
+								    <div class="mui-input-row showTypePicker">
+								    		<label>{{place.country}}</label>
+											<label for="">></label>
+											<label>{{place.city}}</label>
+								    </div>
+								    <div class="mui-input-row" id="showAccountPicker">
+								    		<label class='showAccountPicker' type='button'>{{paytype.type2}}</label>
+								    </div>
+								    <div class="mui-input-row" id="dataSelector">
+								        	<label for="">日期:  {{datatime}}</label>	
+								    </div>
+								</form>
 							</div>
 						</div>
 
@@ -152,10 +169,20 @@
 					<div id="item3mobile" class="mui-slider-item mui-control-content">
 						<div id="scroll3" class="mui-scroll-wrapper">
 							<div class="mui-scroll">
-								<div class="mui-loading">
-									<div class="mui-spinner">
+								<form class="mui-input-group">
+									<div class="mui-input-row" style="height: 50px;">
+										<input id="fe5" v-model="pay" type="number" step="0.1" onblur="noNumbers(event,2)" placeholder="请输入金额" class="txt nojs" name=""  value="0.00" />
 									</div>
-								</div>
+								    <div class="mui-input-row" id="showAccountPicker">
+								    		<label class='showAccountPicker' type='button'>{{paytype.type2}}</label>
+								    </div>
+								    <div class="mui-input-row" id="dataSelector">
+								        	<label for="">日期:  {{datatime}}</label>	
+								    </div>
+								    <div class="mui-input-row">
+								        	<input type="text" class="mui-input-speech" v-model="remarks" placeholder="备注">	
+								    </div>
+								</form>
 							</div>
 						</div>
 
@@ -185,6 +212,7 @@
 			  var t=new Vue({
 			  	el:'#app',
 			  	data:{
+			  		database:'',
 			  		pay:'',
 			  		place:{
 			  			country:'',
@@ -195,153 +223,288 @@
 			  			type2:''
 			  		},
 			  		datatime:'',
+			  		remarks:'',
 			  		tabledata:[]
 			  	},
+			  	mounted(){
+			  		mui.init({
+							swipeBack: false
+						});
+					var earntypePicker=null,typePicker=null;
+					(function($) {
+						$.plusReady(function(){
+						const oH=plus.android.invoke(plus.android.currentWebview(),'getHeight');
+						const x=20;
+					 	window.onresize=()=>{
+							let oH2=plus.android.invoke(plus.android.currentWebview(),'getHeight');
+							var zindex=oH>oH2+x?1:0;
+					 		var main=plus.webview.currentWebview().parent();
+					 		mui.fire(main,'barHide',{zindex:zindex});
+					 		//document.getElementsByClassName('mui-input-group')[1].style.display=zindex?'none':'block';
+					 		
+					 	};
+					 	
+					 });
+					 	$('.mui-scroll-wrapper').scroll({
+							indicators: true //是否显示滚动条
+						});
+						document.getElementById('slider').addEventListener('slide', function(e) {
+							console.log('第二个'+e.detail.slideNumber)
+							if(e.detail.slideNumber===0){
+								setTimeout(function() {
+									if(typePicker==null){
+										typePicker = new mui.PopPicker({
+										    layer: 2
+										});
+										typePicker.setData(typeOptions)
+										typePicker.pickers[0].setSelectedIndex(0);
+										typePicker.pickers[1].setSelectedIndex(0);
+									}
+									var it=typePicker.getSelectedItems();
+									t.place.country=it[0].text;
+									t.place.city=typeOptions[0].children[0].text;
+									t.database="expenditure";//表名称
+								}, 500);
+							}else if (e.detail.slideNumber === 1) {
+									setTimeout(function() {
+										var earntypeOptions = [{
+									        value: '110000',
+									        text: '职业收入',
+									        children: [{
+										                value: "110101",
+										                text: "工资收入"
+										        },
+										        {
+										                value: "110102",
+										                text: "利息收入"
+										        },
+										        {
+										                value: "110103",
+										                text: "加班收入"
+										        },{
+										        	value:"110104",
+										        	text:"奖金收入"
+										        },{
+										        	value:"110105",
+										        	text:"投资收入"
+										        },{
+										        	value:"110106",
+										        	text:"兼职收入"
+										        }
+										        ]
+										    },{
+									        value: '120000',
+									        text: '其它',
+									        children: [{
+										                value: "120101",
+										                text: "礼金收入"
+										        },
+										        {
+										                value: "120102",
+										                text: "中奖收入"
+										        },
+										        {
+										                value: "120103",
+										                text: "意外来钱"
+										        },{
+										        	value:"120104",
+										        	text:"经营所得"
+										        }
+										        ]
+										    },{
+									        value: '130000',
+									        text: '人情收礼',
+									        children: [{
+										                value: "130101",
+										                text: "婚嫁收礼"
+										        },
+										        {
+										                value: "130102",
+										                text: "满月收礼"
+										        },
+										        {
+										                value: "130103",
+										                text: "乔迁收礼"
+										        },{
+										        	value:"130104",
+										        	text:"寿辰收礼"
+										        },{
+										        	value:"130105",
+										        	text:"升学收礼"
+										        },{
+										        	value:"130106",
+										        	text:"白事收礼"
+										        },{
+										        	value:"130107",
+										        	text:"所收红白"
+										        }
+										        ]
+										    },
+										];
+										if(earntypePicker==null){
+											earntypePicker = new mui.PopPicker({
+											    layer: 2
+											});
+										}
+										typePicker.setData(earntypeOptions)
+										typePicker.pickers[0].setSelectedIndex(0);
+										typePicker.pickers[1].setSelectedIndex(0);
+										var it=typePicker.getSelectedItems();
+										t.place.country=it[0].text;
+										t.place.city=earntypeOptions[0].children[0].text;
+										t.database="earntable";//表名称
+										mui('.earn-content').on('tap','.showTypePicker',function(){
+											
+											 typePicker.show(function(items) {
+												//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
+												t.place.country=items[0].text;
+												t.place.city=items[1].text;
+												//返回 false 可以阻止选择框的关闭
+												//return false;
+											});
+										}); 
+									}, 500);
+							} else if (e.detail.slideNumber === 2) {
+								t.database="balancetable";//表名称
+							}
+						});
+						var sliderSegmentedControl = document.getElementById('sliderSegmentedControl');
+						$('.mui-input-group').on('change', 'input', function() {
+							if (this.checked) {
+								sliderSegmentedControl.className = 'mui-slider-indicator mui-segmented-control mui-segmented-control-inverted mui-segmented-control-' + this.value;
+								//force repaint
+								sliderProgressBar.setAttribute('style', sliderProgressBar.getAttribute('style'));
+							}
+						});
+						// 监听tap事件，解决 a标签 不能跳转页面问题
+						//$('body').on('tap','a',function(){document.location.href=this.href;});
+						
+					})(mui);
+					mui.ready(function () {
+					 	//数字输入
+					 	/*mui('.mui-input-row').on('tap','#fe3',function(event){
+					 		this.value='';
+					 	})*/
+					 	var input_number=document.getElementById('fe3');
+					 	var input_number1=document.getElementById('fe4');
+					 	var input_number2=document.getElementById('fe5');
+					 	//类型选择
+					 	if(typePicker==null){
+						typePicker = new mui.PopPicker({
+						    layer: 2
+						});
+						};
+						typePicker.setData(typeOptions)
+						typePicker.pickers[0].setSelectedIndex(0);
+						typePicker.pickers[1].setSelectedIndex(0);
+						var it=typePicker.getSelectedItems();
+						t.place.country=it[0].text;
+						t.place.city=typeOptions[0].children[0].text;
+						t.database="expenditure";//表名称
+						mui('.pay-content').on('tap','.showTypePicker',function(){
+							typePicker.setData(typeOptions)
+							input_number.blur();input_number1.blur();input_number2.blur();
+							 typePicker.show(function(items) {
+								//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
+								t.place.country=items[0].text;
+								t.place.city=items[1].text;
+								console.log(t.place.city)
+								//返回 false 可以阻止选择框的关闭
+								//return false;
+							});
+						}); 
+						//支付选择
+						var payPicker = new mui.PopPicker({
+						    layer: 2
+						});
+						payPicker.setData(accountOptions)
+						payPicker.pickers[0].setSelectedIndex(0);
+						payPicker.pickers[1].setSelectedIndex(0);
+						var it=payPicker.getSelectedItems();
+						t.paytype.type1=it[0].text;
+						t.paytype.type2=accountOptions[0].children[1].text;
+						mui('.mui-input-group').on('tap','#showAccountPicker',function(){
+							input_number.blur();input_number1.blur();input_number2.blur();
+							 payPicker.show(function(items) {
+								//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
+								t.paytype.type1=items[0].text;
+								t.paytype.type2=items[1].text;
+								//返回 false 可以阻止选择框的关闭
+								//return false;
+							});
+						}); 
+						var dtPicker = new mui.DtPicker({"type": "date",
+						    //labels: ['Year', 'Mon', 'Day', 'Hour', 'min'],//设置默认标签区域提示语 
+						});
+						mui('.mui-input-group').on('tap','#dataSelector',function(){
+							input_number.blur();input_number1.blur();nput_number2.blur();
+						    dtPicker.show(function (selectItems) { 
+						    	t.datatime=selectItems.text;
+						    })
+						}); 
+						
+						//保存数据
+						mui('.mui-button-row').on('tap','#sav_btn',()=>{
+							var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+							var msg,len;
+							if(!db){
+								console.log('数据库创建失败')
+							}else{
+								console.log('数据库创建成功')
+							}
+							if(t.database=='balancetable'){
+								db.transaction(function (tx) {
+									
+								tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.database+' (id int identity(1,1) primary key, balance float,gettype_01,gettype_02,remarks,datatime int(10))');
+									console.log('查询数据');
+								tx.executeSql('SELECT * FROM '+t.database, [], function (tx, results) {
+								    len = results.rows.length;
+								    var  i;
+								    msg = "<p>查询记录条数: " + len + "</p>";
+								 	console.log(msg);
+								}, null);
+								});
+								db.transaction(function (tx) {
+								    var date=new Date(t.datatime);
+								    var str=date.getTime();
+								    var sqlstr='INSERT INTO '+t.database+' (id,balance,gettype_01,gettype_02,remarks,datatime) VALUES (?,?,?,?,?,?)';
+								    let data=[(len+1),t.pay,t.paytype.type1,t.paytype.type2,t.remarks,str];
+								    tx.executeSql(sqlstr,data);
+								    mui.toast('保存成功！');
+								});
+							 }else{
+							 	db.transaction(function (tx) {
+									
+								tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.database+' (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+									console.log('查询数据');
+								tx.executeSql('SELECT * FROM '+t.database, [], function (tx, results) {
+								    len = results.rows.length;
+								    var  i;
+								    msg = "<p>查询记录条数: " + len + "</p>";
+								 	console.log(msg);
+								    for (i = 0; i < len; i++){
+								        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
+								        console.log(msg);
+								    }
+								}, null);
+								});
+								db.transaction(function (tx) {
+								    var date=new Date(t.datatime);
+								    var str=date.getTime();
+								    var sqlstr='INSERT INTO '+t.database+' (id,pay, style_01,style_02,paytype_01,paytype_02,datatime) VALUES (?,?,?,?,?,?,?)';
+								    let data=[(len+1),t.pay,t.place.country,t.place.city,t.paytype.type1,t.paytype.type2,str];
+								    tx.executeSql(sqlstr,data);
+								    mui.toast('保存成功！');
+								});
+							 }
+							
+						})
+					});
+			  	}
 			  });
-		mui.init({
-				swipeBack: false
-			});
-			(function($) {
-				$.plusReady(function(){
-				const oH=plus.android.invoke(plus.android.currentWebview(),'getHeight');
-				const x=20;
-			 	window.onresize=()=>{
-					let oH2=plus.android.invoke(plus.android.currentWebview(),'getHeight');
-					var zindex=oH>oH2+x?1:0;
-			 		var main=plus.webview.currentWebview().parent();
-			 		mui.fire(main,'barHide',{zindex:zindex});
-			 		document.getElementsByClassName('mui-input-group')[1].style.display=zindex?'none':'block';
-			 		
-			 	};
-			 	
-			 });
-			 	$('.mui-scroll-wrapper').scroll({
-					indicators: true //是否显示滚动条
-				});
-				var html2 = '<ul class="mui-table-view"><li class="mui-table-view-cell">第二个选项卡子项-1</li><li class="mui-table-view-cell">第二个选项卡子项-2</li><li class="mui-table-view-cell">第二个选项卡子项-3</li><li class="mui-table-view-cell">第二个选项卡子项-4</li><li class="mui-table-view-cell">第二个选项卡子项-5</li></ul>';
-				var html3 = '<ul class="mui-table-view"><li class="mui-table-view-cell">第三个选项卡子项-1</li><li class="mui-table-view-cell">第三个选项卡子项-2</li><li class="mui-table-view-cell">第三个选项卡子项-3</li><li class="mui-table-view-cell">第三个选项卡子项-4</li><li class="mui-table-view-cell">第三个选项卡子项-5</li></ul>';
-				var item2 = document.getElementById('item2mobile');
-				var item3 = document.getElementById('item3mobile');
-				document.getElementById('slider').addEventListener('slide', function(e) {
-					if (e.detail.slideNumber === 1) {
-						if (item2.querySelector('.mui-loading')) {
-							setTimeout(function() {
-								item2.querySelector('.mui-scroll').innerHTML = html2;
-							}, 500);
-						}
-					} else if (e.detail.slideNumber === 2) {
-						if (item3.querySelector('.mui-loading')) {
-							setTimeout(function() {
-								item3.querySelector('.mui-scroll').innerHTML = html3;
-							}, 500);
-						}
-					}
-				});
-				var sliderSegmentedControl = document.getElementById('sliderSegmentedControl');
-				$('.mui-input-group').on('change', 'input', function() {
-					if (this.checked) {
-						sliderSegmentedControl.className = 'mui-slider-indicator mui-segmented-control mui-segmented-control-inverted mui-segmented-control-' + this.value;
-						//force repaint
-						sliderProgressBar.setAttribute('style', sliderProgressBar.getAttribute('style'));
-					}
-				});
-				// 监听tap事件，解决 a标签 不能跳转页面问题
-				$('body').on('tap','a',function(){document.location.href=this.href;});
-				
-			})(mui);
+			
 			 
-			 mui.ready(function () {
-			 	//数字输入
-			 	/*mui('.mui-input-row').on('tap','#fe3',function(event){
-			 		this.value='';
-			 	})*/
-			 	var input_number=document.getElementById('fe3');
-			 	//类型选择
-				var typePicker = new mui.PopPicker({
-				    layer: 2
-				});
-				typePicker.setData(typeOptions)
-				typePicker.pickers[0].setSelectedIndex(0);
-				typePicker.pickers[1].setSelectedIndex(0);
-				var it=typePicker.getSelectedItems();
-				t.place.country=it[0].text;
-				t.place.city=typeOptions[0].children[0].text;
-				mui('.mui-input-group').on('tap','#showTypePicker',function(){
-					input_number.blur();
-					 typePicker.show(function(items) {
-						//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
-						t.place.country=items[0].text;
-						t.place.city=items[1].text;
-						//返回 false 可以阻止选择框的关闭
-						//return false;
-					});
-				}); 
-				//支付选择
-				var payPicker = new mui.PopPicker({
-				    layer: 2
-				});
-				payPicker.setData(accountOptions)
-				payPicker.pickers[0].setSelectedIndex(0);
-				payPicker.pickers[1].setSelectedIndex(0);
-				var it=payPicker.getSelectedItems();
-				t.paytype.type1=it[0].text;
-				t.paytype.type2=accountOptions[0].children[1].text;
-				mui('.mui-input-group').on('tap','#showAccountPicker',function(){
-					input_number.blur();
-					 payPicker.show(function(items) {
-						//cityResult.innerText = "你选择的城市是:" + items[0].text + " " + items[1].text;
-						t.paytype.type1=items[0].text;
-						t.paytype.type2=items[1].text;
-						//返回 false 可以阻止选择框的关闭
-						//return false;
-					});
-				}); 
-				var dtPicker = new mui.DtPicker({"type": "date",
-				    //labels: ['Year', 'Mon', 'Day', 'Hour', 'min'],//设置默认标签区域提示语 
-				});
-				mui('.mui-input-group').on('tap','#dataSelector',function(){
-					input_number.blur();
-				    dtPicker.show(function (selectItems) { 
-				    	t.datatime=selectItems.text;
-				    })
-				}); 
-				
-				//保存数据
-				mui('.mui-button-row').on('tap','#sav_btn',()=>{
-					var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
-					var msg,len;
-					if(!db){
-						console.log('数据库创建失败')
-					}else{
-						console.log('数据库创建成功')
-					}
-					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
-						console.log('查询数据');
-					tx.executeSql('SELECT * FROM EXPENDITURE', [], function (tx, results) {
-					    len = results.rows.length;
-					    var  i;
-					    msg = "<p>查询记录条数: " + len + "</p>";
-					 	console.log(msg);
-					    for (i = 0; i < len; i++){
-					        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
-					        console.log(msg);
-					    }
-					}, null);
-					});
-					db.transaction(function (tx) {
-					    var date=new Date(t.datatime);
-					    var str=date.getTime();
-					    var sqlstr='INSERT INTO expenditure (id,pay, style_01,style_02,paytype_01,paytype_02,datatime) VALUES (?,?,?,?,?,?,?)';
-					    let data=[(len+1),t.pay,t.place.country,t.place.city,t.paytype.type1,t.paytype.type2,str];
-					    tx.executeSql(sqlstr,data);
-					    msg = '<p>数据表已创建，且插入了一条数据。</p>';
-					    console.log(msg);
-					});
-					 
-					
-				})
-			  });
+			 
 		//保留两位小数
 		function noNumbers(e,len)  
 		{  
