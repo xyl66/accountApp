@@ -30,7 +30,7 @@
 				<!--下拉刷新容器-->
 				<div id="refreshContainer" class="mui-content mui-scroll-wrapper">
 				  <div class="mui-scroll">
-				    <!--数据列表-->
+				  	<!--数据列表-->
 				    <ul class="mui-table-view">
 				        <li class="mui-table-view-cell mui-collapse" v-for="todo in tabledata">
 				            <a class="mui-navigate-right" href="#">{{ todo.style_02 }}</a>
@@ -60,8 +60,9 @@
 			  		tabledata:[],
 			  		countdata:[],
 			  		nowtime:'',
+			  		loading:true
 			  	},
-			  	mounted (){
+			  	beforeCreate (){
 			  		//mui
 			  		mui.plusReady(function(){
 			  			mui.init({
@@ -84,11 +85,10 @@
 						console.log('数据库创建成功')
 					}
 					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
-						console.log(t.nowtime);
 					tx.executeSql('SELECT * FROM EXPENDITURE where datatime=?', [t.nowtime], function (tx, results) {
 					    len = results.rows.length;
 					    t.tabledata=results.rows;
+					    plus.nativeUI.closeWaiting();
 					    var  i;
 					    msg = "<p>查询记录条数: " + len + "</p>";
 					    for (i = 0; i < len; i++){
@@ -123,8 +123,6 @@
 						console.log('数据库创建成功')
 					}
 					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS expenditure (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
-					console.log(t.nowtime);
 					tx.executeSql('SELECT * FROM EXPENDITURE where datatime=?', [t.nowtime], function (tx, results) {
 					    len = results.rows.length;
 					    console.log(plus.webview.all().length);

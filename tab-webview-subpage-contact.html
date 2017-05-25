@@ -243,7 +243,7 @@
 					 		//document.getElementsByClassName('mui-input-group')[1].style.display=zindex?'none':'block';
 					 		
 					 	};
-					 	
+					 	plus.nativeUI.closeWaiting();
 					 });
 					 	$('.mui-scroll-wrapper').scroll({
 							indicators: true //是否显示滚动条
@@ -437,7 +437,7 @@
 						    //labels: ['Year', 'Mon', 'Day', 'Hour', 'min'],//设置默认标签区域提示语 
 						});
 						mui('.mui-input-group').on('tap','#dataSelector',function(){
-							input_number.blur();input_number1.blur();nput_number2.blur();
+							input_number.blur();input_number1.blur();input_number2.blur();
 						    dtPicker.show(function (selectItems) { 
 						    	t.datatime=selectItems.text;
 						    })
@@ -455,7 +455,7 @@
 							if(t.database=='balancetable'){
 								db.transaction(function (tx) {
 									
-								tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.database+' (id int identity(1,1) primary key, balance float,gettype_01,gettype_02,remarks,datatime int(10))');
+								tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.database+' (id int identity(1,1), balance float,gettype_01,gettype_02,remarks,datatime int(10))');
 									console.log('查询数据');
 								tx.executeSql('SELECT * FROM '+t.database, [], function (tx, results) {
 								    len = results.rows.length;
@@ -475,7 +475,7 @@
 							 }else{
 							 	db.transaction(function (tx) {
 									
-								tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.database+' (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+								tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.database+' (id int identity(1,1), pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
 									console.log('查询数据');
 								tx.executeSql('SELECT * FROM '+t.database, [], function (tx, results) {
 								    len = results.rows.length;
@@ -493,7 +493,12 @@
 								    var str=date.getTime();
 								    var sqlstr='INSERT INTO '+t.database+' (id,pay, style_01,style_02,paytype_01,paytype_02,datatime) VALUES (?,?,?,?,?,?,?)';
 								    let data=[(len+1),t.pay,t.place.country,t.place.city,t.paytype.type1,t.paytype.type2,str];
-								    tx.executeSql(sqlstr,data);
+								    tx.executeSql(sqlstr,data,function(){
+								    	console.log(t.database);
+								    },function (tx, error) { 
+								    	console.log('添加数据失败: ' + error.message);
+									});
+								    
 								    mui.toast('保存成功！');
 								});
 							 }

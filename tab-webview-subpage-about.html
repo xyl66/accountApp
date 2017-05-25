@@ -30,25 +30,43 @@
 				<!--下拉刷新容器-->
 				<div id="refreshContainer" class="mui-content mui-scroll-wrapper">
 				  <div class="mui-scroll">
-				    <!--数据列表-->
-				    <ul class="mui-table-view">
-				        <li class="mui-table-view-cell mui-collapse" v-for="todo in tabledata">
-				            <a class="mui-navigate-right" href="#">{{ todo.style_02 }}</a>
-				            <span class="mui-badge mui-badge-primary">{{ todo.pay }}</span>
-				            <div class="mui-collapse-content">
-				            		<p>金额：{{ todo.pay }}</p>
-				                <p>消费类型：{{ todo.style_02 }}</p>
-				                <p>支付类型：{{todo.paytype_02}}</p>
-				                <p>消费时间:{{todo.datatime|getPaydatetime}}</p>
-				            </div>
-				        </li>
-				    </ul>
-				    <!--数据列表-->
-				    <ul class="mui-table-view timelist">
-				        <li class="mui-table-view-cell" v-for="todo in countdata">
-				            <a class="mui-navigate-right" href="#" :timecode="todo.datatime">{{ todo.datatime|getPaydatetime }}</a>
-				        </li>
-				    </ul>
+				  	<div class="mui-card">
+				  		<div class="mui-card-header">支出</div>
+				  		<div class="mui-card-content">
+				  			<div class="mui-card-content-inner">
+				  				<!--数据列表-->
+				  				<ul id="OA_task_1" class="mui-table-view timelist">
+				  					<li class="mui-table-view-cell" v-for="(todo,index) in countdata" :index="index">
+				  						<div class="mui-slider-right mui-disabled">
+				  							<a class="mui-btn mui-btn-red">删除</a>
+				  						</div>
+				  						<div class="mui-slider-handle">
+				  							<a class="mui-navigate-right detail" href="#" :timecode="todo.datatime">{{ todo.datatime|getPaydatetime }}</a>
+				  							<span class="mui-badge mui-badge-primary" style="float: right;margin-right: 30px;">{{ todo.payall }}</span>
+				  						</div>
+				  					</li>
+				  				</ul>
+				  			</div>
+				  		</div>
+				  	</div>
+				  	<div class="mui-card">
+				  		<div class="mui-card-header">收入</div>
+				  		<div class="mui-card-content">
+				  			<div class="mui-card-content-inner">
+				  				<!--数据列表-->
+				  				<ul id="OA_task_2" class="mui-table-view timelist">
+				  					<li class="mui-table-view-cell" v-for="(todo,index) in earndata" :index="index">
+				  						<div class="mui-slider-right mui-disabled">
+				  							<a class="mui-btn mui-btn-red">删除</a>
+				  						</div>
+				  						<div class="mui-slider-handle">
+				  							<p class="mui-navigate-right detail" :timecode="todo.datatime">{{ todo.datatime|getPaydatetime }}<span class="mui-badge mui-badge-primary" style="float: right;margin-right: 30px;">{{ todo.payall }}</span></p>
+				  						</div>
+				  					</li>
+				  				</ul>
+				  			</div>
+				  		</div>
+				  	</div>
 				  </div>
 				</div>
 			</div>
@@ -60,16 +78,8 @@
 	<!--引入时间戳转时间函数-->
 	<script src="js/date.js" type="text/javascript" charset="utf-8"></script>
 	<script>
-		var t=new Vue({
-			  	el:'#app',
-			  	data:{
-			  		tablename:'expenditure',
-			  		tabledata:[],
-			  		countdata:[]
-			  	},
-			  	mounted(){
-			  		//读取数据
-				var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+		var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+		var getdata=function(vt){
 					var msg,len;
 					if(!db){
 						console.log('数据库创建失败')
@@ -77,25 +87,135 @@
 						console.log('数据库创建成功')
 					}
 					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.tablename+' (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+					//tx.executeSql('CREATE TABLE IF NOT EXISTS '+vt.tablename.paydbname+' (id int identity(1,1), pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
 						console.log('查询数据');
-					tx.executeSql('SELECT * FROM '+t.tablename, [], function (tx, results) {
+					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+vt.tablename.paydbname+' GROUP BY datatime', [], function (tx, results) {
 					    len = results.rows.length;
-					    t.tabledata=results.rows;
-					    var  i;
+					    vt.countdata=results.rows;
+					    console.log(len);
 					    msg = "<p>查询记录条数: " + len + "</p>";
-					    for (i = 0; i < len; i++){
-					        //msg = "<p><b>" + results.rows.item(i).balance+"</b><b>" + results.rows.item(i).id+"</b><b>" +results.rows.item(i).remarks+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
-					        console.log(msg);
-					    }
 					}, null);
-					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+t.tablename+' GROUP BY datatime', [], function (tx, results) {
+					//收入查询
+					//tx.executeSql('CREATE TABLE IF NOT EXISTS '+vt.tablename.earndbname+' (id int identity(1,1), pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
+						console.log('查询数据');
+					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+vt.tablename.earndbname+' GROUP BY datatime', [], function (tx, results) {
 					    len = results.rows.length;
-					    t.countdata=results.rows;
+					    vt.earndata=results.rows;
 					    console.log(len);
 					    msg = "<p>查询记录条数: " + len + "</p>";
 					}, null);
 					});
+		}
+		var t=new Vue({
+			  	el:'#app',
+			  	data:{
+			  		tablename:{paydbname:'expenditure',
+			  		earndbname:'earntable'},
+			  		tabledata:[],
+			  		countdata:[],
+			  		earndata:[],
+			  	},
+			  	mounted(){
+			  		//读取数据
+					getdata(this);
+					// mui
+					mui.init({
+					    	swipeBack:true,//启用右滑关闭功能
+					      	pullRefresh : {
+						        container:'#refreshContainer',
+						        down : {
+						         	contentrefresh: '正在加载...',
+						          callback :pulldownRefresh 
+						        },
+					      }
+					    });
+					    //
+					    mui.ready(function(){
+					    	//第一个demo，拖拽后显示操作图标，点击操作图标删除元素；
+								mui('#OA_task_1').on('tap', '.mui-btn', function(event) {
+									var elem = this;
+									var li = elem.parentNode.parentNode;
+									var id = li.querySelector('.detail').getAttribute('timecode');
+									mui.confirm('确认删除该条记录？', 'Hello MUI', btnArray, function(e) {
+										if (e.index == 0) {
+											db.transaction(function (tx) {
+												tx.executeSql("delete from "+t.tablename.paydbname+" where datatime= ?",[id],function (tx, result) {
+													n=li.getAttribute('index');
+													var arr=[];
+													for(var x=0;x<t.countdata.length;x++){
+														if(x!=n){
+														arr.push(t.countdata[x]);
+														console.log('success1:'+x+';'+t.countdata[x])
+														}
+													}
+													t.countdata=arr;
+													mui.swipeoutClose(li);
+												},(tx,error)=>{
+													console.log(error)
+												});
+											});
+										} else {
+											setTimeout(function() {
+												$.swipeoutClose(li);
+											}, 0);
+										}
+									});
+								});
+								var btnArray = ['确认', '取消'];
+								mui('#OA_task_2').on('tap', '.mui-btn', function(event) {
+									var elem = this;
+									var li = elem.parentNode.parentNode;
+									var id = li.querySelector('.detail').getAttribute('timecode');
+									mui.confirm('确认删除该条记录？', 'Hello MUI', btnArray, function(e) {
+										if (e.index == 0) {
+											db.transaction(function (tx) {
+												tx.executeSql("delete from "+t.tablename.earndbname+" where datatime= ?",[id],function (tx, result) {
+													n=li.getAttribute('index');
+													var arr=[];
+													for(var x=0;x<t.earndata.length;x++){
+														if(x!=n){
+														arr.push(t.earndata[x]);
+														console.log('success1:'+x+';'+t.earndata[x])
+														}
+													}
+													t.earndata=arr;
+													mui.swipeoutClose(li);
+												},null);
+											});
+										} else {
+											setTimeout(function() {
+												mui.swipeoutClose(li);
+											}, 0);
+										}
+									});
+								});
+					    	mui('#OA_task_1').on('tap','.detail',function(){
+					    		//打开新闻详情
+							  nw=mui.openWindow({
+							    id:'detail',
+							    url:'pullrefresh_main.html',
+							    waiting:{
+							      autoShow:false,//自动显示等待框，默认为true
+							      title:'正在加载...',//等待对话框上显示的提示内容
+							    }
+							  });
+							  nw.addEventListener( "loaded", function(){
+								plus.nativeUI.showWaiting('数据加载中...');
+							}, false );
+							  var detail=plus.webview.getWebviewById('detail');
+							  if(typeof(Storage)!=="undefined")
+								{
+								    // 是的! 支持 localStorage  sessionStorage 对象!
+								    // 一些代码.....
+								    localStorage.setItem('stime', this.getAttribute('timecode'));
+								} else {
+								    // 抱歉! 不支持 web 存储。
+								}
+							  plus.storage.setItem('nowtime',this.getAttribute('timecode'));
+					    	  //mui.fire(detail,'godetail',{time:this.getAttribute('timecode')});
+					    	})
+					    })
+					// mui
 			  },
 			  filters:{
 			  	getPaydatetime:function(value){
@@ -103,63 +223,14 @@
 			  		return getLocalTime(t);
 			  	}
 			  }
-			  });
-	    mui.init({
-	    	swipeBack:true,//启用右滑关闭功能
-	      	pullRefresh : {
-		        container:'#refreshContainer',
-		        down : {
-		         	contentrefresh: '正在加载...',
-		          callback :pulldownRefresh 
-		        },
-	      }
-	    });
-	    //
-	    mui.ready(function(){
-	    	mui('.timelist').on('tap','a',function(){
-	    		//打开新闻详情
-			  mui.openWindow({
-			    id:'detail',
-			    url:'pullrefresh_main.html'
-			  });
-			  var detail=plus.webview.getWebviewById('detail');
-			  plus.storage.setItem('nowtime',this.getAttribute('timecode'));
-	    	  //mui.fire(detail,'godetail',{time:this.getAttribute('timecode')});
-	    	})
-	    })
+			 });
+	    
 	    /**
 			 * 下拉刷新具体业务实现
 			 */
 			function pulldownRefresh() {
 				setTimeout(function() {
-					var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
-					var msg,len;
-					if(!db){
-						console.log('数据库创建失败')
-					}else{
-						console.log('数据库创建成功')
-					}
-					db.transaction(function (tx) {
-					tx.executeSql('CREATE TABLE IF NOT EXISTS '+t.tablename+' (id int identity(1,1) primary key, pay float,style_01,style_02,paytype_01,paytype_02,datatime int(10))');
-						console.log('查询数据');
-					tx.executeSql('SELECT * FROM '+t.tablename, [], function (tx, results) {
-					    len = results.rows.length;
-					    t.tabledata=results.rows;
-					    var  i;
-					    msg = "<p>查询记录条数: " + len + "</p>";
-					    for (i = 0; i < len; i++){
-					        msg = "<p><b>" + results.rows.item(i).pay+"</b><b>" + results.rows.item(i).id+"</b><b>" + results.rows.item(i).datatime + "</b></p>";
-					        console.log(t.tabledata);
-					    }
-					}, null);
-					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+t.tablename+' GROUP BY datatime', [], function (tx, results) {
-					    len = results.rows.length;
-					    t.countdata=results.rows;
-					    console.log(t.tablename);
-					    console.log(len);
-					    msg = "<p>查询记录条数: " + len + "</p>";
-					}, null);
-					});
+					getdata(t);
 					mui('#refreshContainer').pullRefresh().endPulldownToRefresh(); //refresh completed
 				}, 1000);
 			}

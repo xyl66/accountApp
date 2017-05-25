@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>ECahrt 示例</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<!--标准mui.css-->
+		<link rel="stylesheet" href="css/mui.min.css">
+		<!--App自定义的css-->
+		<!-- <link rel="stylesheet" type="text/css" href="../css/app.css" /> -->
+		<style>
+			h5 {
+				margin-top: 30px;
+				font-weight: bold;
+			}
+			h5:first-child {
+				margin-top: 15px;
+			}
+			.chart {
+				height: 200px;
+				margin: 0px;
+				padding: 0px;
+			}
+		</style>
+		<script src="js/mui.min.js"></script>
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<!--下拉刷新容器-->
+			<div id="refreshContainer" class="mui-content mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div class="mui-content-padded">
+						<h5>柱图示例</h5>
+						<div class="chart" style="height: 200px;width: auto;" id="barChart"></div>
+						<h5>线图示例</h5>
+						<div class="chart" style="height: 200px;width: auto;" id="lineChart"></div>
+						<h5>饼图示例</h5>
+						<div class="chart" style="height: 200px;width: auto;" id="pieChart"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<style type="text/css">
+			.chart {
+				height: 200px;
+				margin: 0px;
+				padding: 0px;
+			}
+		</style>
+		<script src="libs/echarts-all.js"></script>
+		<script>
+			var getOption = function(chartType,ttime,tdata,t2data) {
+				var chartOption = chartType == 'pie' ? {
+					calculable: false,
+					series: [{
+						name: '访问来源',
+						type: 'pie',
+						radius: '65%',
+						center: ['50%', '50%'],
+						data: [{
+							value: 335,
+							name: '直接访问'
+						}, {
+							value: 310,
+							name: '邮件营销'
+						}, {
+							value: 234,
+							name: '联盟广告'
+						}, {
+							value: 135,
+							name: '视频广告'
+						}, {
+							value: 1548,
+							name: '搜索引擎'
+						}]
+					}]
+				} : {
+					legend: {
+						data: ['支出', '收入']
+					},
+					grid: {
+						x: 35,
+						x2: 10,
+						y: 30,
+						y2: 25
+					},
+					toolbox: {
+						show: false,
+						feature: {
+							mark: {
+								show: true
+							},
+							dataView: {
+								show: true,
+								readOnly: false
+							},
+							magicType: {
+								show: true,
+								type: ['line', 'bar']
+							},
+							restore: {
+								show: true
+							},
+							saveAsImage: {
+								show: true
+							}
+						}
+					},
+					calculable: false,
+					xAxis: [{
+						type: 'category',
+						data: ttime
+					}],
+					yAxis: [{
+						type: 'value',
+						splitArea: {
+							show: true
+						}
+					}],
+					series: [{
+						name: '支出',
+						type: chartType,
+						data: tdata
+					}, {
+						name: '收入',
+						type: chartType,
+						data: t2data
+					}]
+				};
+				console.log('查询数据2');
+				return chartOption;
+			};
+			var getOptionSql=function(){
+				//读取数据
+				var db = openDatabase('mydb', '1.0', 'Save DB', 2 * 1024 * 1024);
+					var msg,len;
+					var ttime=[],tdata=[],t2data=[];
+					var t={tablename:{
+						paydbname:'expenditure',
+			  			earndbname:'earntable'
+			  			}
+					};
+					if(!db){
+						console.log('数据库创建失败')
+					}else{
+						console.log('数据库创建成功')
+					}
+					db.transaction(function (tx) {
+					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+t.tablename.paydbname+' GROUP BY datatime', [], function (tx, results) {
+					    len = results.rows.length;
+					    for(var x=0;x<len;x++){
+					    		ttime.push(unix2time(results.rows[x].datatime));
+					    		tdata.push(results.rows[x].payall);
+					    }
+					    //init(ttime,tdata)
+					    console.log('查询数据1');
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					}, null);
+					tx.executeSql('SELECT *, SUM(pay) AS payall FROM '+t.tablename.earndbname+' GROUP BY datatime', [], function (tx, results) {
+					    len = results.rows.length;
+					    for(var x=0;x<len;x++){
+					    		//ttime.push(unix2time(results.rows[x].datatime));
+					    		t2data.push(results.rows[x].payall);
+					    }
+					    init(ttime,tdata,t2data)
+					    console.log('查询数据1');
+					    msg = "<p>查询记录条数: " + len + "</p>";
+					}, null);
+					});
+			}
+			var byId = function(id) {
+				 var t= document.getElementById(id);
+				 t.style.width="auto";
+				 t.style.height="200px";
+				 return t;
+			};
+			var init=function(time,data,data2){
+				var barChart = echarts.init(byId('barChart'));
+			barChart.setOption(getOption('bar',time,data,data2));
+			var lineChart = echarts.init(byId('lineChart'));
+			lineChart.setOption(getOption('line',time,data,data2));
+			var pieChart = echarts.init(byId('pieChart'));
+			pieChart.setOption(getOption('pie',time,data,data2));
+			mui('#refreshContainer').pullRefresh().endPulldownToRefresh();
+			}
+			var unix2time=function(time){
+				var ntime= new Date(time);
+				return ntime.toLocaleDateString();
+			}
+			// H5 plus事件处理
+			function plusReady(){
+				getOptionSql();
+				plus.nativeUI.closeWaiting();
+			}
+			if(window.plus){
+				plusReady();
+			}else{
+				document.addEventListener("plusready",plusReady,false);
+			}
+			mui.init({
+			  pullRefresh : {
+			    container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+			    down : {
+			      height:50,//可选,默认50.触发下拉刷新拖动距离,
+			      auto: false,//可选,默认false.自动下拉刷新一次
+			      contentdown : "下拉可以刷新",//可选，在下拉可刷新状态时，下拉刷新控件上显示的标题内容
+			      contentover : "释放立即刷新",//可选，在释放可刷新状态时，下拉刷新控件上显示的标题内容
+			      contentrefresh : "正在刷新...",//可选，正在刷新状态时，下拉刷新控件上显示的标题内容
+			      callback :getOptionSql //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+			    }
+			  }
+			});
+			byId("echarts").addEventListener('tap',function(){
+				var url = this.getAttribute('data-url');
+				plus.runtime.openURL(url);
+			},false);
+		</script>
+	</body>
+
+</html>

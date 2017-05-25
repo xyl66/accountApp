@@ -154,14 +154,17 @@
 						"url": 'tab-webview-main.html'
 					});
 					var toMain = function() {
-						setTimeout(function() {
+						setTimeout(function() {		
+							//plus.nativeUI.showWaiting( "等待中..." );
 							$.openWindow({
 								id: 'tabmain',
 								show: {
+									autoShow:true,
 									aniShow: 'pop-in'
 								},
 								waiting: {
-									autoShow: false
+									autoShow:true,//自动显示等待框，默认为true
+							        title:'正在加载...',//等待对话框上显示的提示内容
 								}
 							});
 						}, 0);

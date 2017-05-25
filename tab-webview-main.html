@@ -22,15 +22,15 @@
 			<h1 id="title" class="mui-title">记一笔</h1>
 		</header>
 		<nav class="mui-bar mui-bar-tab" id="footer-menu">
-			<a id="defaultTab" class="mui-tab-item " href="tab-webview-subpage-about.html">
+			<a id="defaultTab" class="mui-tab-item mui-active" href="tab-webview-subpage-about.html">
 				<span class="mui-icon mui-icon-home"></span>
-				<span class="mui-tab-label">首页</span>
+				<span class="mui-tab-label">账单列表</span>
 			</a>
 			<a class="mui-tab-item" href="tab-webview-subpage-chat.html">
 				<span class="mui-icon mui-icon-email"><span class="mui-badge">9</span></span>
-				<span class="mui-tab-label">消息</span>
+				<span class="mui-tab-label">图表分析</span>
 			</a>
-			<a class="mui-tab-item mui-active" href="tab-webview-subpage-contact.html">
+			<a class="mui-tab-item " href="tab-webview-subpage-contact.html">
 				<span class="mui-icon mui-icon-contact"></span>
 				<span class="mui-tab-label">记一笔</span>
 			</a>
@@ -43,21 +43,21 @@
 		<script type="text/javascript" charset="utf-8"> 
 			 //mui初始化
 			mui.init();
-			var subpages = ['tab-webview-subpage-about.html', 'tab-webview-subpage-chat.html', 'tab-webview-subpage-contact.html', 'tab-webview-subpage-setting.html'];
+			var subpages = ['tab-webview-subpage-about.html', 'tab-webview-subpage-contact.html', 'tab-webview-subpage-setting.html'];
 			var subpage_style = {
 				top: '45px',
 				bottom: '51px'
 			};
-			
+			var needinit=true;
 			var aniShow = {};
 			
 			 //创建子页面，首个选项卡页面显示，其它均隐藏；
 			mui.plusReady(function() {
 				var self = plus.webview.currentWebview();
-				for (var i = 0; i < 4; i++) {
+				for (var i = 0; i < 3; i++) {
 					var temp = {};
 					var sub = plus.webview.create(subpages[i], subpages[i], subpage_style);
-					if (i != 2) {
+					if (i != 0) {
 						sub.hide();
 					}else{
 						temp[subpages[i]] = "true";
@@ -67,7 +67,7 @@
 				}
 			});
 			 //当前激活选项
-			var activeTab = subpages[2];
+			var activeTab = subpages[0];
 			var title = document.getElementById("title");
 			 //选项卡点击事件
 			mui('.mui-bar-tab').on('tap', 'a', function(e) {
@@ -75,6 +75,12 @@
 				if (targetTab == activeTab) {
 					return;
 				}
+				//触发详情页面的newsId事件
+				if(targetTab=='tab-webview-subpage-chat.html'&&needinit){
+				  	var sub = plus.webview.create(targetTab, targetTab, subpage_style);
+				  	plus.nativeUI.showWaiting('加载中...');
+				  	needinit=false;
+				  }
 				//更换标题
 				title.innerHTML = this.querySelector('.mui-tab-label').innerHTML;
 				//显示目标选项卡
